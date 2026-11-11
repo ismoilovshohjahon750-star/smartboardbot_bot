@@ -1,0 +1,8 @@
+{
+  "name": "smartboardbot Max version",
+  "description": "86 dyuymli interaktiv doskalar uchun xavfsiz blokirovka va markaziy Render server orqali dars boshqaruvi.",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}

@@ -1,0 +1,791 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>SmartBoard 86 — Boshqaruv Markazi</title>
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
+  <style>
+    :root {
+      --bg: #0f172a;
+      --surface: #1e293b;
+      --surface-alt: #273449;
+      --border: #334155;
+      --text: #f8fafc;
+      --text-muted: #94a3b8;
+      --primary: #0ea5e9;
+      --primary-hover: #0284c7;
+      --success: #10b981;
+      --warning: #f59e0b;
+      --danger: #ef4444;
+      --radius: 12px;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Inter, sans-serif;
+      background-color: var(--bg);
+      color: var(--text);
+      line-height: 1.45;
+      padding-bottom: 84px;
+    }
+
+    .header {
+      background-color: var(--surface);
+      border-bottom: 1px solid var(--border);
+      padding: 14px 16px;
+      position: sticky;
+      top: 0;
+      z-index: 20;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    .header-title {
+      font-size: 16px;
+      font-weight: 700;
+      color: var(--text);
+    }
+
+    .header-sub {
+      font-size: 12px;
+      color: var(--text-muted);
+      margin-top: 2px;
+    }
+
+    .role-badge {
+      font-size: 11px;
+      font-weight: 600;
+      padding: 4px 10px;
+      border-radius: 999px;
+      background-color: rgba(14, 165, 233, 0.15);
+      color: var(--primary);
+      border: 1px solid rgba(14, 165, 233, 0.35);
+      white-space: nowrap;
+    }
+
+    .container {
+      padding: 14px 16px;
+      max-width: 720px;
+      margin: 0 auto;
+    }
+
+    .card {
+      background-color: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 14px;
+      margin-bottom: 12px;
+    }
+
+    .card-header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+
+    .card-title {
+      font-size: 15px;
+      font-weight: 600;
+      color: var(--text);
+    }
+
+    .card-meta {
+      font-size: 12px;
+      color: var(--text-muted);
+      margin-top: 2px;
+      word-break: break-all;
+    }
+
+    .status-pill {
+      font-size: 11px;
+      font-weight: 600;
+      padding: 3px 9px;
+      border-radius: 999px;
+      white-space: nowrap;
+    }
+
+    .status-locked {
+      background-color: rgba(16, 185, 129, 0.14);
+      color: var(--success);
+      border: 1px solid rgba(16, 185, 129, 0.35);
+    }
+
+    .status-active {
+      background-color: rgba(245, 158, 11, 0.14);
+      color: var(--warning);
+      border: 1px solid rgba(245, 158, 11, 0.35);
+    }
+
+    .status-offline {
+      background-color: rgba(239, 68, 68, 0.14);
+      color: var(--danger);
+      border: 1px solid rgba(239, 68, 68, 0.35);
+    }
+
+    .status-new {
+      background-color: rgba(14, 165, 233, 0.14);
+      color: var(--primary);
+      border: 1px solid rgba(14, 165, 233, 0.35);
+    }
+
+    .btn-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 10px;
+    }
+
+    .btn {
+      flex: 1 1 auto;
+      min-height: 40px;
+      padding: 8px 12px;
+      border-radius: 8px;
+      border: 1px solid transparent;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      transition: opacity 0.15s ease;
+    }
+
+    .btn:active {
+      opacity: 0.75;
+    }
+
+    .btn-primary {
+      background-color: var(--primary);
+      color: #ffffff;
+    }
+
+    .btn-success {
+      background-color: var(--success);
+      color: #ffffff;
+    }
+
+    .btn-danger {
+      background-color: var(--danger);
+      color: #ffffff;
+    }
+
+    .btn-secondary {
+      background-color: var(--surface-alt);
+      color: var(--text);
+      border-color: var(--border);
+    }
+
+    .btn-sm {
+      min-height: 34px;
+      padding: 6px 10px;
+      font-size: 12px;
+      flex: 0 0 auto;
+    }
+
+    .section-title {
+      font-size: 13px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      color: var(--text-muted);
+      margin: 16px 0 10px;
+    }
+
+    .form-group {
+      margin-bottom: 10px;
+    }
+
+    .form-label {
+      display: block;
+      font-size: 12px;
+      color: var(--text-muted);
+      margin-bottom: 4px;
+    }
+
+    .input {
+      width: 100%;
+      padding: 10px 12px;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      background-color: var(--bg);
+      color: var(--text);
+      font-size: 14px;
+      outline: none;
+    }
+
+    .input:focus {
+      border-color: var(--primary);
+    }
+
+    .bottom-nav {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background-color: var(--surface);
+      border-top: 1px solid var(--border);
+      display: flex;
+      z-index: 30;
+      padding-bottom: env(safe-area-inset-bottom, 0px);
+    }
+
+    .nav-item {
+      flex: 1;
+      padding: 10px 4px;
+      background: none;
+      border: none;
+      color: var(--text-muted);
+      font-size: 11px;
+      font-weight: 600;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+      cursor: pointer;
+    }
+
+    .nav-item.active {
+      color: var(--primary);
+    }
+
+    .nav-item svg {
+      width: 20px;
+      height: 20px;
+    }
+
+    .toast {
+      position: fixed;
+      top: 68px;
+      left: 50%;
+      transform: translateX(-50%);
+      background-color: var(--surface-alt);
+      color: var(--text);
+      border: 1px solid var(--border);
+      padding: 10px 16px;
+      border-radius: 10px;
+      font-size: 13px;
+      font-weight: 500;
+      z-index: 50;
+      display: none;
+      max-width: 90%;
+      text-align: center;
+    }
+
+    .empty-state {
+      text-align: center;
+      padding: 28px 16px;
+      color: var(--text-muted);
+      font-size: 14px;
+    }
+
+    .log-item {
+      padding: 10px 0;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .log-item:last-child {
+      border-bottom: none;
+    }
+
+    .log-time {
+      font-size: 11px;
+      color: var(--primary);
+      font-family: monospace;
+    }
+
+    .log-action {
+      font-size: 13px;
+      color: var(--text);
+      margin-top: 2px;
+    }
+
+    .log-user {
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+
+    .hidden {
+      display: none !important;
+    }
+  </style>
+</head>
+<body>
+  <header class="header">
+    <div>
+      <div class="header-title">SmartBoard 86</div>
+      <div class="header-sub" id="userSubtitle">Yuklanmoqda...</div>
+    </div>
+    <div class="role-badge" id="roleBadge">...</div>
+  </header>
+
+  <div id="toast" class="toast"></div>
+
+  <main class="container">
+    <div id="authError" class="card hidden">
+      <div class="card-title">Ruxsat cheklangan</div>
+      <div class="card-meta" id="authErrorText">Sizda ushbu boshqaruv panelidan foydalanish huquqi yo'q.</div>
+    </div>
+
+    <!-- TAB 1: DOSKALAR -->
+    <section id="tab-boards" class="tab-panel">
+      <div id="bulkControls" class="card hidden">
+        <div class="card-header">
+          <div>
+            <div class="card-title">Barcha doskalar (Umumiy boshqaruv)</div>
+            <div class="card-meta" id="bulkSummary">0 ta xona, 0 ta faol doska</div>
+          </div>
+        </div>
+        <div class="btn-row">
+          <button class="btn btn-success" onclick="sendAction('unlock', 'ALL')">Barchasini ochish (45 min)</button>
+          <button class="btn btn-danger" onclick="sendAction('lock', 'ALL')">Barchasini qulflash</button>
+          <button class="btn btn-secondary" onclick="sendAction('extend', 'ALL')">Barchasiga +10 daq</button>
+        </div>
+      </div>
+
+      <div id="unassignedSection" class="hidden">
+        <div class="section-title">Yangi aniqlangan doskalar</div>
+        <div id="unassignedList"></div>
+      </div>
+
+      <div class="section-title">Doskalar ro'yxati</div>
+      <div id="boardsList"></div>
+    </section>
+
+    <!-- TAB 2: XONALAR (Admin) -->
+    <section id="tab-rooms" class="tab-panel hidden">
+      <div class="card">
+        <div class="card-title" style="margin-bottom: 10px;">Yangi xona qo'shish</div>
+        <div class="form-group">
+          <label class="form-label" for="roomMacInput">Qurilma ID (MAC manzil)</label>
+          <input id="roomMacInput" class="input" type="text" placeholder="Masalan: 00:1A:2B:3C:4D:5E" />
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="roomNameInput">Xona nomi</label>
+          <input id="roomNameInput" class="input" type="text" placeholder="Masalan: 101-Fizika" />
+        </div>
+        <button class="btn btn-primary" style="width: 100%;" onclick="addRoom()">Xonani saqlash</button>
+      </div>
+
+      <div class="section-title">Ro'yxatdagi xonalar</div>
+      <div id="roomsList"></div>
+    </section>
+
+    <!-- TAB 3: O'QITUVCHILAR (Admin) -->
+    <section id="tab-teachers" class="tab-panel hidden">
+      <div class="card">
+        <div class="card-title" style="margin-bottom: 10px;">O'qituvchi qo'shish</div>
+        <div class="form-group">
+          <label class="form-label" for="teacherIdInput">Telegram ID</label>
+          <input id="teacherIdInput" class="input" type="number" placeholder="Masalan: 123456789" />
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="teacherNameInput">F.I.SH</label>
+          <input id="teacherNameInput" class="input" type="text" placeholder="Masalan: Ali Valiyev" />
+        </div>
+        <button class="btn btn-primary" style="width: 100%;" onclick="addTeacher()">O'qituvchini saqlash</button>
+      </div>
+
+      <div class="section-title">Ruxsat etilgan o'qituvchilar</div>
+      <div id="teachersList"></div>
+    </section>
+
+    <!-- TAB 4: JURNAL (Admin) -->
+    <section id="tab-logs" class="tab-panel hidden">
+      <div class="section-title">Kirish va boshqaruv jurnali</div>
+      <div class="card" id="logsList"></div>
+    </section>
+  </main>
+
+  <nav class="bottom-nav" id="bottomNav">
+    <button class="nav-item active" data-tab="boards" onclick="switchTab('boards')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <rect x="2" y="3" width="20" height="14" rx="2"></rect>
+        <line x1="8" y1="21" x2="16" y2="21"></line>
+        <line x1="12" y1="17" x2="12" y2="21"></line>
+      </svg>
+      <span>Doskalar</span>
+    </button>
+    <button class="nav-item admin-only hidden" data-tab="rooms" onclick="switchTab('rooms')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+        <polyline points="9 22 9 12 15 12 15 22"></polyline>
+      </svg>
+      <span>Xonalar</span>
+    </button>
+    <button class="nav-item admin-only hidden" data-tab="teachers" onclick="switchTab('teachers')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+        <circle cx="9" cy="7" r="4"></circle>
+        <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+        <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+      </svg>
+      <span>O'qituvchilar</span>
+    </button>
+    <button class="nav-item admin-only hidden" data-tab="logs" onclick="switchTab('logs')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+        <polyline points="14 2 14 8 20 8"></polyline>
+        <line x1="16" y1="13" x2="8" y2="13"></line>
+        <line x1="16" y1="17" x2="8" y2="17"></line>
+      </svg>
+      <span>Jurnal</span>
+    </button>
+  </nav>
+
+  <script>
+    const tg = window.Telegram && window.Telegram.WebApp ? window.Telegram.WebApp : null;
+    if (tg) {
+      tg.ready();
+      tg.expand();
+    }
+
+    let currentState = null;
+    let activeTab = 'boards';
+    const knownUnassignedMacs = new Set();
+    const draftBoardNames = {};
+    let refreshTimer = null;
+
+    function showToast(msg) {
+      const el = document.getElementById('toast');
+      el.textContent = msg;
+      el.style.display = 'block';
+      clearTimeout(window._toastTimer);
+      window._toastTimer = setTimeout(() => {
+        el.style.display = 'none';
+      }, 2800);
+    }
+
+    function getHeaders() {
+      const headers = { 'Content-Type': 'application/json' };
+      if (tg && tg.initData) {
+        headers['X-Telegram-Init-Data'] = tg.initData;
+      }
+      return headers;
+    }
+
+    async function apiFetch(url, options = {}) {
+      const res = await fetch(url, {
+        ...options,
+        headers: {
+          ...getHeaders(),
+          ...(options.headers || {})
+        }
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        throw new Error(data.error || 'Server xatoligi');
+      }
+      return data;
+    }
+
+    function switchTab(tab) {
+      activeTab = tab;
+      document.querySelectorAll('.tab-panel').forEach((p) => p.classList.add('hidden'));
+      document.getElementById('tab-' + tab).classList.remove('hidden');
+      document.querySelectorAll('.nav-item').forEach((n) => {
+        n.classList.toggle('active', n.dataset.tab === tab);
+      });
+    }
+
+    function escapeHtml(str) {
+      return String(str || '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;');
+    }
+
+    function renderState(state) {
+      currentState = state;
+
+      document.getElementById('userSubtitle').textContent = state.user.name || 'Foydalanuvchi';
+      document.getElementById('roleBadge').textContent = state.user.role;
+
+      const isAdmin = state.user.role === 'SUPER_ADMIN' || state.user.role === 'IT_ADMIN';
+      document.querySelectorAll('.admin-only').forEach((el) => {
+        el.classList.toggle('hidden', !isAdmin);
+      });
+
+      // Bulk controls
+      const bulkEl = document.getElementById('bulkControls');
+      if (state.rooms.length > 1 || state.boards.length > 1) {
+        bulkEl.classList.remove('hidden');
+        document.getElementById('bulkSummary').textContent =
+          `${state.rooms.length} ta xona, ${state.boards.length} ta ulangan doska`;
+      } else {
+        bulkEl.classList.add('hidden');
+      }
+
+      // Unassigned boards
+      const unassignedSection = document.getElementById('unassignedSection');
+      const unassignedList = document.getElementById('unassignedList');
+      if (isAdmin && state.unassignedBoards && state.unassignedBoards.length > 0) {
+        let hasNewlyDetected = false;
+        state.unassignedBoards.forEach((b) => {
+          if (!knownUnassignedMacs.has(b.mac)) {
+            knownUnassignedMacs.add(b.mac);
+            hasNewlyDetected = true;
+          }
+        });
+        if (hasNewlyDetected) {
+          showToast('Yangi doska aniqlandi! Nomini kiriting.');
+        }
+
+        const activeEl = document.activeElement;
+        const isTypingInUnassigned = activeEl && unassignedList.contains(activeEl) && activeEl.tagName === 'INPUT';
+
+        unassignedSection.classList.remove('hidden');
+        if (!isTypingInUnassigned) {
+          unassignedList.innerHTML = state.unassignedBoards.map((b, idx) => {
+            const safeMac = escapeHtml(b.mac);
+            const draftVal = escapeHtml(draftBoardNames[b.mac] || '');
+            return `
+              <div class="card">
+                <div class="card-header">
+                  <div>
+                    <div class="card-title">Yangi doska aniqlandi</div>
+                    <div class="card-meta">ID (MAC): ${safeMac}</div>
+                    ${b.ip ? `<div class="card-meta">IP: ${escapeHtml(b.ip)}</div>` : ''}
+                  </div>
+                  <span class="status-pill status-new">Yangi</span>
+                </div>
+                <div class="form-group" style="margin-top: 8px; margin-bottom: 8px;">
+                  <input
+                    id="unassignedName_${idx}"
+                    class="input"
+                    type="text"
+                    value="${draftVal}"
+                    placeholder="Xona va doska nomini kiriting (masalan: 101-Fizika)"
+                    oninput="draftBoardNames['${safeMac}'] = this.value"
+                    onkeydown="if (event.key === 'Enter') saveUnassignedBoard('${safeMac}', 'unassignedName_${idx}')"
+                  />
+                </div>
+                <div class="btn-row">
+                  <button class="btn btn-primary" onclick="saveUnassignedBoard('${safeMac}', 'unassignedName_${idx}')">Saqlash va xonaga qo'shish</button>
+                </div>
+              </div>
+            `;
+          }).join('');
+        }
+      } else {
+        unassignedSection.classList.add('hidden');
+        unassignedList.innerHTML = '';
+      }
+
+      // Boards list
+      const boardsList = document.getElementById('boardsList');
+      if (state.rooms.length === 0) {
+        boardsList.innerHTML = `<div class="card empty-state">Hozircha ro'yxatda xona yo'q. Yangi doska ulanganda bu yerda ko'rinadi.</div>`;
+      } else {
+        boardsList.innerHTML = state.rooms.map((r) => {
+          const b = state.boards.find((item) => item.roomId && item.roomId.toUpperCase() === r.id.toUpperCase());
+          const isOnline = b && b.isOnline;
+          let statusClass = 'status-offline';
+          let statusLabel = 'Oflayn';
+          let extraInfo = '';
+
+          if (isOnline) {
+            if (b.isLocked) {
+              statusClass = 'status-locked';
+              statusLabel = 'Qulfda';
+            } else {
+              statusClass = 'status-active';
+              const mins = Math.ceil((b.secondsRemaining || 0) / 60);
+              statusLabel = `Darsda (${mins} daq)`;
+              if (b.teacherName) {
+                extraInfo = `<div class="card-meta">O'qituvchi: ${escapeHtml(b.teacherName)}</div>`;
+              }
+            }
+          }
+
+          return `
+            <div class="card">
+              <div class="card-header">
+                <div>
+                  <div class="card-title">${escapeHtml(r.name)}</div>
+                  <div class="card-meta">ID: ${escapeHtml(r.id)}</div>
+                  ${extraInfo}
+                </div>
+                <span class="status-pill ${statusClass}">${statusLabel}</span>
+              </div>
+              <div class="btn-row">
+                <button class="btn btn-success" onclick="sendAction('unlock', '${escapeHtml(r.id)}')">Ochish (45 min)</button>
+                <button class="btn btn-danger" onclick="sendAction('lock', '${escapeHtml(r.id)}')">Qulflash</button>
+                <button class="btn btn-secondary btn-sm" onclick="sendAction('extend', '${escapeHtml(r.id)}')">+10 daq</button>
+              </div>
+            </div>
+          `;
+        }).join('');
+      }
+
+      // Admin tabs
+      if (isAdmin) {
+        const roomsList = document.getElementById('roomsList');
+        roomsList.innerHTML = state.rooms.length === 0
+          ? `<div class="card empty-state">Xonalar ro'yxati bo'sh.</div>`
+          : state.rooms.map((r) => `
+            <div class="card">
+              <div class="card-header">
+                <div>
+                  <div class="card-title">${escapeHtml(r.name)}</div>
+                  <div class="card-meta">ID: ${escapeHtml(r.id)}</div>
+                  <div class="card-meta">Qo'shgan: ${escapeHtml(r.addedBy || '')}</div>
+                </div>
+                <button class="btn btn-danger btn-sm" onclick="deleteRoom('${escapeHtml(r.id)}')">O'chirish</button>
+              </div>
+            </div>
+          `).join('');
+
+        const teachersList = document.getElementById('teachersList');
+        const teachers = state.teachers || [];
+        teachersList.innerHTML = teachers.length === 0
+          ? `<div class="card empty-state">O'qituvchilar ro'yxati bo'sh.</div>`
+          : teachers.map((t) => `
+            <div class="card">
+              <div class="card-header">
+                <div>
+                  <div class="card-title">${escapeHtml(t.name)}</div>
+                  <div class="card-meta">Telegram ID: ${escapeHtml(t.id)}</div>
+                </div>
+                <button class="btn btn-danger btn-sm" onclick="deleteTeacher(${Number(t.id)})">O'chirish</button>
+              </div>
+            </div>
+          `).join('');
+
+        const logsList = document.getElementById('logsList');
+        const logs = state.logs || [];
+        logsList.innerHTML = logs.length === 0
+          ? `<div class="empty-state">Jurnal bo'sh.</div>`
+          : logs.map((l) => `
+            <div class="log-item">
+              <div class="log-time">${escapeHtml(l.timestamp)}</div>
+              <div class="log-action">${escapeHtml(l.action)}</div>
+              <div class="log-user">${escapeHtml(l.userName)} (${escapeHtml(l.role)})</div>
+            </div>
+          `).join('');
+      }
+    }
+
+    async function loadState() {
+      try {
+        const state = await apiFetch('/api/webapp/state');
+        document.getElementById('authError').classList.add('hidden');
+        renderState(state);
+      } catch (err) {
+        document.getElementById('authError').classList.remove('hidden');
+        document.getElementById('authErrorText').textContent = err.message;
+        document.getElementById('bottomNav').classList.add('hidden');
+        document.querySelectorAll('.tab-panel').forEach((p) => p.classList.add('hidden'));
+      }
+    }
+
+    async function sendAction(action, targetRoomId) {
+      try {
+        await apiFetch('/api/webapp/action', {
+          method: 'POST',
+          body: JSON.stringify({ action, targetRoomId })
+        });
+        showToast('Buyruq yuborildi');
+        setTimeout(loadState, 400);
+      } catch (err) {
+        showToast(err.message);
+      }
+    }
+
+    async function saveUnassignedBoard(mac, inputId) {
+      const inputEl = document.getElementById(inputId);
+      const name = (inputEl ? inputEl.value : (draftBoardNames[mac] || '')).trim();
+      if (!name) {
+        if (inputEl) inputEl.focus();
+        return showToast('Xona nomini kiriting');
+      }
+      try {
+        await apiFetch('/api/webapp/rooms', {
+          method: 'POST',
+          body: JSON.stringify({ id: mac, name })
+        });
+        delete draftBoardNames[mac];
+        showToast('Doska va xona saqlandi');
+        loadState();
+      } catch (err) {
+        showToast(err.message);
+      }
+    }
+
+    async function addRoom() {
+      const id = document.getElementById('roomMacInput').value.trim();
+      const name = document.getElementById('roomNameInput').value.trim();
+      if (!id || !name) {
+        return showToast('MAC manzil va xona nomini kiriting');
+      }
+      try {
+        await apiFetch('/api/webapp/rooms', {
+          method: 'POST',
+          body: JSON.stringify({ id, name })
+        });
+        document.getElementById('roomMacInput').value = '';
+        document.getElementById('roomNameInput').value = '';
+        showToast('Xona saqlandi');
+        loadState();
+      } catch (err) {
+        showToast(err.message);
+      }
+    }
+
+    async function deleteRoom(id) {
+      try {
+        await apiFetch('/api/webapp/rooms/' + encodeURIComponent(id), { method: 'DELETE' });
+        showToast('Xona o\'chirildi');
+        loadState();
+      } catch (err) {
+        showToast(err.message);
+      }
+    }
+
+    async function addTeacher() {
+      const id = document.getElementById('teacherIdInput').value.trim();
+      const name = document.getElementById('teacherNameInput').value.trim();
+      if (!id || !name) {
+        return showToast('Telegram ID va F.I.SH kiriting');
+      }
+      try {
+        await apiFetch('/api/webapp/teachers', {
+          method: 'POST',
+          body: JSON.stringify({ id: Number(id), name })
+        });
+        document.getElementById('teacherIdInput').value = '';
+        document.getElementById('teacherNameInput').value = '';
+        showToast('O\'qituvchi saqlandi');
+        loadState();
+      } catch (err) {
+        showToast(err.message);
+      }
+    }
+
+    async function deleteTeacher(id) {
+      try {
+        await apiFetch('/api/webapp/teachers/' + encodeURIComponent(id), { method: 'DELETE' });
+        showToast('O\'qituvchi o\'chirildi');
+        loadState();
+      } catch (err) {
+        showToast(err.message);
+      }
+    }
+
+    loadState();
+    refreshTimer = setInterval(loadState, 4000);
+  </script>
+</body>
+</html>
