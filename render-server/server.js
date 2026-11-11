@@ -7,7 +7,12 @@ const path = require('path');
 const crypto = require('crypto');
 
 const PORT = process.env.PORT || 3000;
-const BOT_TOKEN = (process.env.TELEGRAM_BOT_TOKEN || '').trim();
+const BOT_TOKENS = [
+  ...(process.env.TELEGRAM_BOT_TOKEN || '').split(','),
+  ...(process.env.TELEGRAM_BOT_TOKEN_2 || '').split(',')
+]
+  .map((t) => t.trim())
+  .filter((t) => t && t.includes(':') && !t.startsWith('YOUR_'));
 const SUPER_ADMIN_ID = parseInt(process.env.SUPER_ADMIN_ID || '8453381252', 10);
 const WEBAPP_URL = (
   process.env.WEBAPP_URL ||
@@ -225,7 +230,7 @@ function broadcastCommand(command) {
 
 // Yangi doska aniqlanganda adminlarga xabar yuborish
 function notifyAdminsNewBoard(macAddress, ipAddress) {
-  if (!bot || notifiedNewBoards.has(macAddress)) return;
+  if (bots.length === 0 || notifiedNewBoards.has(macAddress)) return;
   notifiedNewBoards.add(macAddress);
 
   const text = `<b>[Yangi Doska] Yangi interaktiv doska aniqlandi</b>\n\n` +
@@ -242,7 +247,9 @@ function notifyAdminsNewBoard(macAddress, ipAddress) {
 
   const adminIds = new Set([SUPER_ADMIN_ID, ...db.itAdmins.map((a) => a.id)]);
   for (const adminId of adminIds) {
-    bot.sendMessage(adminId, text, { parse_mode: 'HTML', reply_markup: replyMarkup }).catch(() => {});
+    for (const b of bots) {
+      b.sendMessage(adminId, text, { parse_mode: 'HTML', reply_markup: replyMarkup }).catch(() => {});
+    }
   }
 }
 
@@ -257,7 +264,7 @@ app.use('/webapp', express.static(path.join(__dirname, 'public')));
 // Telegram Mini App initData tekshiruvi
 function verifyTelegramWebApp(req, res, next) {
   const initData = req.headers['x-telegram-init-data'] || '';
-  if (!initData || !BOT_TOKEN) {
+  if (!initData || BOT_TOKENS.length === 0) {
     return res.status(401).json({ error: 'Telegram orqali kiring (initData topilmadi)' });
   }
 
@@ -274,10 +281,13 @@ function verifyTelegramWebApp(req, res, next) {
       .map(([k, v]) => `${k}=${v}`)
       .join('\n');
 
-    const secretKey = crypto.createHmac('sha256', 'WebAppData').update(BOT_TOKEN).digest();
-    const calculatedHash = crypto.createHmac('sha256', secretKey).update(dataCheckString).digest('hex');
+    const isValid = BOT_TOKENS.some((token) => {
+      const secretKey = crypto.createHmac('sha256', 'WebAppData').update(token).digest();
+      const calculatedHash = crypto.createHmac('sha256', secretKey).update(dataCheckString).digest('hex');
+      return calculatedHash === hash;
+    });
 
-    if (calculatedHash !== hash) {
+    if (!isValid) {
       return res.status(401).json({ error: 'Telegram imzosi tasdiqlanmadi' });
     }
 
@@ -600,15 +610,19 @@ app.post('/api/board/lock', (req, res) => {
 // ==========================================
 // TELEGRAM BOT SOZLAMALARI
 // ==========================================
-let bot = null;
+const bots = [];
 
-if (BOT_TOKEN && BOT_TOKEN.includes(':') && !BOT_TOKEN.startsWith('YOUR_')) {
-  try {
-    bot = new TelegramBot(BOT_TOKEN, { polling: true });
-    console.log('Telegram Bot muvaffaqiyatli ishga tushirildi (Polling).');
-  } catch (e) {
-    console.error('Telegram botni ishga tushirishda xatolik:', e.message);
-  }
+if (BOT_TOKENS.length > 0) {
+  BOT_TOKENS.forEach((token, idx) => {
+    try {
+      const instance = new TelegramBot(token, { polling: true });
+      bots.push(instance);
+      attachBotHandlers(instance);
+      console.log(`Telegram Bot #${idx + 1} muvaffaqiyatli ishga tushirildi (Polling).`);
+    } catch (e) {
+      console.error(`Telegram bot #${idx + 1} ni ishga tushirishda xatolik:`, e.message);
+    }
+  });
 } else {
   console.log('-------------------------------------------------------------');
   console.log('TELEGRAM_BOT_TOKEN kiritilmagan.');
@@ -616,7 +630,7 @@ if (BOT_TOKEN && BOT_TOKEN.includes(':') && !BOT_TOKEN.startsWith('YOUR_')) {
   console.log('-------------------------------------------------------------');
 }
 
-if (bot) {
+function attachBotHandlers(bot) {
   let is401Reported = false;
   bot.on('polling_error', (error) => {
     if (error.code === 'ETELEGRAM' && (error.message.includes('401') || (error.response && error.response.statusCode === 401))) {
